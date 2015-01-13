@@ -5,4 +5,4 @@ Original idea and website by J.E.Murphy - http://jemurphy.org/
 
 Also because I saw Jonic(https://github.com/Jonic/WhatColourIsIt-ScreenSaver) made a Mac version.
 
-![image](WhatColorIsIt-ScreenSaver-Win32/ScrnSaver.png)
+![image](https://github.com/Envl/WhatColorIsIt-ScreenSaver-Win32/Scrnshot.jpg)
