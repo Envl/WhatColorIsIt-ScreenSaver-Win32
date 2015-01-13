@@ -6,3 +6,8 @@ Original idea and website by J.E.Murphy - http://jemurphy.org/
 Also because I saw Jonic(https://github.com/Jonic/WhatColourIsIt-ScreenSaver) made a Mac version.
 
 ![image](https://github.com/Envl/WhatColorIsIt-ScreenSaver-Win32/blob/master/Scrnshot.jpg)
+
+//How to use
+//用法
+右键--->安装
+(right click---> install)
