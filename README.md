@@ -9,6 +9,6 @@ Also because I saw Jonic(https://github.com/Jonic/WhatColourIsIt-ScreenSaver) ma
 
 //How to use
 //用法
-Download ：WhatColourIsIt.scr
+Download ：WhatColourIsIt.scr/WhatColourIsIt-Release.scr
 右键--->安装
 (right click---> install)
