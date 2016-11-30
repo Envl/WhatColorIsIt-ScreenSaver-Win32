@@ -7,8 +7,8 @@ Also because I saw Jonic(https://github.com/Jonic/WhatColourIsIt-ScreenSaver) ma
 
 ![image](https://github.com/Envl/WhatColorIsIt-ScreenSaver-Win32/blob/master/Scrnshot.jpg)
 
-//How to use
-//用法
-Download ：WhatColourIsIt.scr/WhatColourIsIt-Release.scr
-右键--->安装
+//How to use  
+//用法  
+Download ：WhatColourIsIt.scr/WhatColourIsIt-Release.scr  
+右键--->安装  
 (right click---> install)
