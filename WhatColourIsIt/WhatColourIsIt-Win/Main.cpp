@@ -8,38 +8,76 @@
 
 
 
-
 int Hex2Dec(int hexNum)
 {
 	return (((int)(hexNum/10))* 16 + hexNum % 10);
 }
+
+int Date2Day(int yy,int mm,int dd) 
+{
+	int z, y, m;
+	float		j;
+	z = 14 - mm;
+	z /= 12;
+	y = yy + 4800 - z;
+	m = mm + 12 * z - 3;
+	j = 153 * m + 2;
+	j = j / 5 + dd + y * 365 + y / 4 - y / 100 + y / 400 - 2472633;
+	return j;
+}
+
+double YProgress(SYSTEMTIME* st)
+{
+	double ADay = 86400;
+	double AnHour = 3600;
+	double AMin = 60;
+	int yy = st->wYear % 100;
+	double days = Date2Day(yy, st->wMonth, st->wDay) - Date2Day(yy, 1, 1);
+	//double days = Date2Day(yy, 12, 31) - Date2Day(yy, 1, 1); // for validation
+	double seconds = (days * ADay) + (st->wHour*AnHour) + (st->wMinute*AMin) + st->wSecond;
+	//double seconds = (days * ADay) + (23*AnHour) + (59*AMin) + st->wSecond;   // for validation
+	double ms = seconds * 1000 + st->wMilliseconds;
+
+	int year = st->wYear;
+	int FIX = ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0);
+	int DAYs = 365 + FIX;
+	double YearInMs = DAYs * ADay * 1000;
+	double p = ms / YearInMs;
+	return p;
+}
+
 LRESULT CALLBACK ScreenSaverProc(HWND hWnd,UINT message,
 	WPARAM wParam,LPARAM lParam)
 {
 	static int cx = GetSystemMetrics(SM_CXSCREEN);
 	static int cy = GetSystemMetrics(SM_CYSCREEN);
+	int leftMargin = 0;
+	static int barHeight = 0; // the bar of TODAY
 	static RECT scrnRECT;
 	static PAINTSTRUCT ps = { NULL };
 	static HDC hDC = NULL;
 	//static HBRUSH hBkBrush;//背景画刷
 	static SYSTEMTIME st = { 0 };//存储时间
+	static SYSTEMTIME customST = { 0 };
 	static UINT uTimer = 0;
 	static char tmpStr[24];
 	static TEXTMETRIC tm;
 	static HFONT hFont,hFont2;
 	static HDC storageDC = NULL;//用来缓冲
 	static HBITMAP hBitMap = NULL;
-
+	
+	static double yP;  // year progress
+	static double yesterdayYP;
+	static double todayP; // 今天过了多久
 	switch (message)
 	{
 	case WM_CREATE:
 		//建立屏幕区域RECT
 		GetClientRect(GetDesktopWindow(), &scrnRECT);
-		
-		//创建一个计时器
+		//创建字体
 		hFont = CreateFont
 			(
-			240, 100,    //高度20, 宽取0表示由系统选择最佳值
+			120, 0,    //高度20, 宽取0表示由系统选择最佳值
 			0, 0,    //文本倾斜，与字体倾斜都为0
 			FW_LIGHT,    //粗体
 			0, 0, 0,        //非斜体，无下划线，无中划线
@@ -48,11 +86,11 @@ LRESULT CALLBACK ScreenSaverProc(HWND hWnd,UINT message,
 			CLIP_DEFAULT_PRECIS,
 			DEFAULT_QUALITY,        //一系列的默认值
 			DEFAULT_PITCH | FF_DONTCARE,
-			"微软雅黑 Light"    //字体名称
+			"Tahoma"    //字体名称
 			);
 		hFont2 = CreateFont
 			(
-			60, 25,    //高度20, 宽取0表示由系统选择最佳值
+			36, 0,    //高度20, 宽取0表示由系统选择最佳值
 			0, 0,    //文本倾斜，与字体倾斜都为0
 			FW_LIGHT,    //粗体
 			0, 0, 0,        //非斜体，无下划线，无中划线
@@ -61,10 +99,10 @@ LRESULT CALLBACK ScreenSaverProc(HWND hWnd,UINT message,
 			CLIP_DEFAULT_PRECIS,
 			DEFAULT_QUALITY,        //一系列的默认值
 			DEFAULT_PITCH | FF_DONTCARE,
-			TEXT("微软雅黑 Light")    //字体名称
+			TEXT("Tahoma")    //字体名称
 			);
 		//设置定时器
-		uTimer = SetTimer(hWnd, 1, 1000, NULL);
+		uTimer = SetTimer(hWnd, 1, 30, NULL); //  interval in ms
 
 		hDC = GetDC(hWnd);
 		//得到屏幕的兼容dc
@@ -74,44 +112,73 @@ LRESULT CALLBACK ScreenSaverProc(HWND hWnd,UINT message,
 		ReleaseDC(hWnd, hDC);
 		SelectObject(storageDC, hBitMap);
 		SelectObject(storageDC, GetStockObject(DKGRAY_BRUSH));
+		//记录昨天为止今年过了多久 progress
+		GetLocalTime(&customST);
+		customST.wHour = 0;
+		customST.wMinute = 0;
+		customST.wSecond = 0;
+		yesterdayYP = YProgress(&customST);
 
 		break;
 	case WM_TIMER:
-		//更换用来填充背景的画刷
 		GetLocalTime(&st);//获得当前本地时间
-		DeleteObject(SelectObject(storageDC, CreateSolidBrush(RGB(Hex2Dec(st.wHour),
-			Hex2Dec(st.wMinute), Hex2Dec(st.wSecond))))); 
-		//DeleteObject(SelectObject(hDC, CreateSolidBrush(RGB(st.wHour*255/24,
-			//st.wMinute * 255 / 60, (st.wSecond*1000+st.wMilliseconds) * 255 / 60000))));
+		yP = YProgress(&st);
+		customST.wDay = st.wDay;
+		customST.wMonth = st.wMonth;
+		customST.wYear = st.wYear;
+		yesterdayYP = YProgress(&customST);
+		todayP = ((st.wHour*3600+st.wMinute*60+st.wSecond)*1000+st.wMilliseconds)/ (1000*86400.0);
+		barHeight = (scrnRECT.bottom - scrnRECT.top) / 365.0 + 1;
+		//跨年彩蛋
+		if (st.wDay == 31 && st.wMonth == 12)
+		{
+			yesterdayYP = todayP;
+			todayP = (st.wSecond*1000.0+st.wMilliseconds)/60000.0;
+			barHeight = 1;
+		}
+
+		//DeleteObject(SelectObject(storageDC, CreateSolidBrush(RGB(Hex2Dec(st.wHour),
+			//Hex2Dec(st.wMinute), Hex2Dec(st.wSecond))))); 
 		InvalidateRect(hWnd, &scrnRECT, FALSE);
 		break;
 	case WM_PAINT:
-	
-		//Draw BKG
-		Rectangle(storageDC, scrnRECT.left, scrnRECT.top, scrnRECT.right, scrnRECT.bottom);//改变背景颜色
+		DeleteObject(SelectObject(storageDC, CreatePen(PS_NULL,1,RGB(255, 255, 255))));
+		//Draw BG
+		DeleteObject(SelectObject(storageDC, CreateSolidBrush(RGB(0, 0, 0))));
+		//DeleteObject(SelectObject(storageDC, CreateSolidBrush(RGB(42, 30, 52))));
+		Rectangle(storageDC, scrnRECT.left, scrnRECT.top, scrnRECT.right+1, scrnRECT.bottom+1);//改变背景颜色
+		// 昨天为止从上到下的Progress
+		DeleteObject(SelectObject(storageDC, CreateSolidBrush(RGB(255, 228, 11))));
+		Rectangle(storageDC, scrnRECT.left, scrnRECT.top
+			, scrnRECT.right+1, scrnRECT.bottom*yesterdayYP);
+		//今天从左到右的Progress
+		DeleteObject(SelectObject(storageDC, CreateSolidBrush(RGB(255, 228, 11))));
+		Rectangle(storageDC, scrnRECT.left, scrnRECT.bottom*yesterdayYP-1
+			, scrnRECT.right*todayP+1, scrnRECT.bottom*yesterdayYP+barHeight);
+		//circle
+		DeleteObject(SelectObject(storageDC, CreateSolidBrush(RGB(255, 255, 255))));
+		Ellipse(storageDC, scrnRECT.right*todayP - 7, scrnRECT.bottom*yesterdayYP-7
+			, scrnRECT.right*todayP + 7, scrnRECT.bottom*yesterdayYP + 7);
+		DeleteObject(SelectObject(storageDC, CreatePen(PS_NULL, 1, RGB(255, 255, 255))));
 
+		//Draw Text
 		SetBkMode(storageDC, TRANSPARENT);
-		SetTextColor(storageDC,RGB(255,255,255));
-		
-		//This is TimeText
-		sprintf_s(tmpStr, "%d%d%s%d%d%s%d%d", 
-			(int)(st.wHour / 10), st.wHour%10, ":", 
-			(int)(st.wMinute/10),st.wMinute%10, ":", 
-			(int)(st.wSecond/10),st.wSecond%10
-			);
+		//SetBkColor(storageDC, RGB(255, 228, 11));
+		//SetTextColor(storageDC, RGB(255, 255, 255));
+		SetTextColor(storageDC, RGB(255, 255, 255));
+
+		//This is Progress
+		sprintf_s(tmpStr, "%.7lf%s",yP*100,"%");
 		SelectObject(storageDC, hFont);
 		GetTextMetrics(storageDC, &tm);
-		TextOutA(storageDC, cx / 2 - 3.8 * tm.tmAveCharWidth, cy*1/4, tmpStr, lstrlenA(tmpStr));
+		leftMargin=cx / 6 - 3.8 * tm.tmAveCharWidth;
+		TextOutA(storageDC, leftMargin, cy * 3 / 4, tmpStr, lstrlenA(tmpStr));
 		
-		//This is ColorText
-		sprintf_s(tmpStr, "%s%d%d%d%d%d%d", "#",
-			(int)(st.wHour / 10), st.wHour % 10,
-			(int)(st.wMinute / 10), st.wMinute % 10,
-			(int)(st.wSecond / 10), st.wSecond % 10
-			);
+		//This is Text
+		sprintf_s(tmpStr, "of %d has past",st.wYear);
 		SelectObject(storageDC, hFont2);
 		GetTextMetrics(storageDC, &tm);
-		TextOutA(storageDC, cx / 2 - 4 * tm.tmAveCharWidth, 3 * cy / 4, tmpStr, lstrlenA(tmpStr));
+		TextOutA(storageDC, leftMargin, 8 * cy / 9, tmpStr, lstrlenA(tmpStr));
 
 		//画完后一次性bit到屏幕
 		hDC = BeginPaint(hWnd, &ps);
@@ -140,9 +207,21 @@ BOOL WINAPI ScreenSaverConfigureDialog(HWND hDlg,
 	LPARAM lParam
 	)
 {
-	
+	float tt;
+	int tmp;
 	switch (message)   {
 	case WM_INITDIALOG:    // 创建设置对话框并初始化各控件值   
+		SYSTEMTIME customST;
+		RECT r;
+		GetClientRect(GetDesktopWindow(), &r);
+		 tmp = (r.bottom-r.top) / 365;
+		GetLocalTime(&customST);
+		tt = ((customST.wHour * 3600 + customST.wMinute * 60 + customST.wSecond) * 1000 + customST.wMilliseconds) / (1000 * 86400.0);
+		tt = YProgress(&customST);
+		customST.wHour = 0;
+		customST.wMinute = 0;
+		customST.wSecond = 0;
+		tt = YProgress(&customST);
 		return TRUE;
 	case WM_COMMAND:   
 		if ( LOWORD( wParam ) == IDOK ) 

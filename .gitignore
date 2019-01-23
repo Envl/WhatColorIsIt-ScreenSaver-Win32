@@ -5,11 +5,12 @@
 *.suo
 *.user
 *.sln.docstates
+.vs/
 
 # Build results
 
-[Dd]ebug/
-[Rr]elease/
+WhatColourIsIt/Debug/
+WhatColourIsIt/[Rr]elease/
 x64/
 build/
 [Bb]in/
