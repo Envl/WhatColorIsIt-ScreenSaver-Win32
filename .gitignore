@@ -10,7 +10,9 @@
 # Build results
 
 WhatColourIsIt/Debug/
-WhatColourIsIt/[Rr]elease/
+WhatColourIsIt/Release/
+WhatColourIsIt/WhatColourIsIt-Win/Release/
+WhatColourIsIt/WhatColourIsIt-Win/Debug/
 x64/
 build/
 [Bb]in/

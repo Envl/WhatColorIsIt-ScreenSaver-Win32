@@ -53,14 +53,14 @@ LRESULT CALLBACK ScreenSaverProc(HWND hWnd,UINT message,
 	static int cy = GetSystemMetrics(SM_CYSCREEN);
 	int leftMargin = 0;
 	static int barHeight = 0; // the bar of TODAY
-	static RECT scrnRECT;
+	static RECT scrnRECT,todayTxtRect;
 	static PAINTSTRUCT ps = { NULL };
 	static HDC hDC = NULL;
 	//static HBRUSH hBkBrush;//背景画刷
 	static SYSTEMTIME st = { 0 };//存储时间
 	static SYSTEMTIME customST = { 0 };
 	static UINT uTimer = 0;
-	static char tmpStr[24];
+	static char tmpStr[54];
 	static TEXTMETRIC tm;
 	static HFONT hFont,hFont2;
 	static HDC storageDC = NULL;//用来缓冲
@@ -161,6 +161,7 @@ LRESULT CALLBACK ScreenSaverProc(HWND hWnd,UINT message,
 			, scrnRECT.right*todayP + 7, scrnRECT.bottom*yesterdayYP + 7);
 		DeleteObject(SelectObject(storageDC, CreatePen(PS_NULL, 1, RGB(255, 255, 255))));
 
+
 		//Draw Text
 		SetBkMode(storageDC, TRANSPARENT);
 		//SetBkColor(storageDC, RGB(255, 228, 11));
@@ -174,11 +175,16 @@ LRESULT CALLBACK ScreenSaverProc(HWND hWnd,UINT message,
 		leftMargin=cx / 6 - 3.8 * tm.tmAveCharWidth;
 		TextOutA(storageDC, leftMargin, cy * 3 / 4, tmpStr, lstrlenA(tmpStr));
 		
-		//This is Text
+		//This is Text of year Progress
 		sprintf_s(tmpStr, "of %d has past",st.wYear);
 		SelectObject(storageDC, hFont2);
 		GetTextMetrics(storageDC, &tm);
 		TextOutA(storageDC, leftMargin, 8 * cy / 9, tmpStr, lstrlenA(tmpStr));
+		// Text of day progress
+		leftMargin = scrnRECT.right*todayP *0.83;
+		sprintf_s(tmpStr, "%.7lf%s", todayP * 100, "%");
+		TextOutA(storageDC, leftMargin, scrnRECT.bottom*yesterdayYP + 10, tmpStr, lstrlenA(tmpStr));
+		TextOutA(storageDC, leftMargin, scrnRECT.bottom*yesterdayYP + 45, "of today has passed", lstrlenA("of today has passed"));
 
 		//画完后一次性bit到屏幕
 		hDC = BeginPaint(hWnd, &ps);
