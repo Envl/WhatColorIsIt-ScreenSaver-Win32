@@ -5,7 +5,11 @@ Original idea and website by J.E.Murphy - http://jemurphy.org/
 
 Also because I saw Jonic(https://github.com/Jonic/WhatColourIsIt-ScreenSaver) made a Mac version.
 
-![image](https://github.com/Envl/WhatColorIsIt-ScreenSaver-Win32/blob/master/Scrnshot.jpg)
+![image](https://github.com/Envl/WhatColorIsIt-ScreenSaver-Win32/blob/master/Scrnshot.jpg)  
+  
+# Year Meter
+![image](https://github.com/Envl/WhatColorIsIt-ScreenSaver-Win32/blob/master/yearmeter.png)
+
 
 //How to use  
 //用法  

@@ -56,6 +56,7 @@ LRESULT CALLBACK ScreenSaverProc(HWND hWnd,UINT message,
 	static RECT scrnRECT,todayTxtRect;
 	static PAINTSTRUCT ps = { NULL };
 	static HDC hDC = NULL;
+
 	//static HBRUSH hBkBrush;//背景画刷
 	static SYSTEMTIME st = { 0 };//存储时间
 	static SYSTEMTIME customST = { 0 };
@@ -65,6 +66,7 @@ LRESULT CALLBACK ScreenSaverProc(HWND hWnd,UINT message,
 	static HFONT hFont,hFont2;
 	static HDC storageDC = NULL;//用来缓冲
 	static HBITMAP hBitMap = NULL;
+	LOGBRUSH lb;
 	
 	static double yP;  // year progress
 	static double yesterdayYP;
@@ -144,25 +146,50 @@ LRESULT CALLBACK ScreenSaverProc(HWND hWnd,UINT message,
 	case WM_PAINT:
 		DeleteObject(SelectObject(storageDC, CreatePen(PS_NULL,1,RGB(255, 255, 255))));
 		//Draw BG
+		//DeleteObject(SelectObject(storageDC, CreateSolidBrush(RGB(35, 31, 32))));
 		DeleteObject(SelectObject(storageDC, CreateSolidBrush(RGB(0, 0, 0))));
-		//DeleteObject(SelectObject(storageDC, CreateSolidBrush(RGB(42, 30, 52))));
 		Rectangle(storageDC, scrnRECT.left, scrnRECT.top, scrnRECT.right+1, scrnRECT.bottom+1);//改变背景颜色
 		// 昨天为止从上到下的Progress
-		DeleteObject(SelectObject(storageDC, CreateSolidBrush(RGB(255, 228, 11))));
-		Rectangle(storageDC, scrnRECT.left, scrnRECT.top
-			, scrnRECT.right+1, scrnRECT.bottom*yesterdayYP);
+		//DeleteObject(SelectObject(storageDC, CreateSolidBrush(RGB(255, 228, 11))));
+		//Rectangle(storageDC, scrnRECT.left, scrnRECT.top
+		//	, scrnRECT.right+1, scrnRECT.bottom*yesterdayYP);
 		//今天从左到右的Progress
-		DeleteObject(SelectObject(storageDC, CreateSolidBrush(RGB(255, 228, 11))));
-		Rectangle(storageDC, scrnRECT.left, scrnRECT.bottom*yesterdayYP-1
-			, scrnRECT.right*todayP+1, scrnRECT.bottom*yesterdayYP+barHeight);
+		//DeleteObject(SelectObject(storageDC, CreateSolidBrush(RGB(255, 228, 11))));
+		//Rectangle(storageDC, scrnRECT.left, scrnRECT.bottom*yesterdayYP-1
+		//	, scrnRECT.right*todayP+1, scrnRECT.bottom*yesterdayYP+barHeight);
+		
+				//左上角到当前时间点的线
+		lb.lbColor = RGB(88, 88, 88);
+		lb.lbHatch = 0;
+		lb.lbStyle = BS_SOLID;
+		//DeleteObject(SelectObject(storageDC, CreatePen(PS_SOLID, 3, )));
+		//SetGraphicsMode()
+		// shadow
+		DeleteObject(SelectObject(storageDC, ExtCreatePen(PS_COSMETIC, 1, &lb, 0, NULL)));
+		MoveToEx(storageDC, 0, 0, NULL);
+		LineTo(storageDC, scrnRECT.right*todayP, scrnRECT.bottom*yesterdayYP + barHeight - 3);
+		MoveToEx(storageDC, 0, 0, NULL);
+		LineTo(storageDC, scrnRECT.right*todayP + 2, scrnRECT.bottom*yesterdayYP + barHeight - 5);
+		// shadow 2
+		lb.lbColor = RGB(177, 177, 177);
+		DeleteObject(SelectObject(storageDC, ExtCreatePen(PS_COSMETIC, 1, &lb, 0, NULL)));
+		MoveToEx(storageDC, 0, 0, NULL);
+		LineTo(storageDC, scrnRECT.right*todayP, scrnRECT.bottom*yesterdayYP + barHeight - 4);
+		MoveToEx(storageDC, 0, 0, NULL);
+		LineTo(storageDC, scrnRECT.right*todayP + 1, scrnRECT.bottom*yesterdayYP + barHeight - 5);
+		// main line
+		lb.lbColor = RGB(255, 255, 255);
+		DeleteObject(SelectObject(storageDC, ExtCreatePen(PS_COSMETIC, 1, &lb, 0, NULL)));
+		MoveToEx(storageDC, 0, 0, NULL);
+		LineTo(storageDC, scrnRECT.right*todayP + 1, scrnRECT.bottom*yesterdayYP + barHeight-4);
 		//circle
+		//DeleteObject(SelectObject(storageDC, CreatePen(PS_NULL, 1, RGB(255, 255, 255))));
 		DeleteObject(SelectObject(storageDC, CreateSolidBrush(RGB(255, 255, 255))));
-		Ellipse(storageDC, scrnRECT.right*todayP - 7, scrnRECT.bottom*yesterdayYP-7
+		Ellipse(storageDC, scrnRECT.right*todayP - 7, scrnRECT.bottom*yesterdayYP - 7
 			, scrnRECT.right*todayP + 7, scrnRECT.bottom*yesterdayYP + 7);
-		DeleteObject(SelectObject(storageDC, CreatePen(PS_NULL, 1, RGB(255, 255, 255))));
-
 
 		//Draw Text
+		DeleteObject(SelectObject(storageDC, CreatePen(PS_NULL, 1, RGB(255, 255, 255))));
 		SetBkMode(storageDC, TRANSPARENT);
 		//SetBkColor(storageDC, RGB(255, 228, 11));
 		//SetTextColor(storageDC, RGB(255, 255, 255));
@@ -181,7 +208,7 @@ LRESULT CALLBACK ScreenSaverProc(HWND hWnd,UINT message,
 		GetTextMetrics(storageDC, &tm);
 		TextOutA(storageDC, leftMargin, 8 * cy / 9, tmpStr, lstrlenA(tmpStr));
 		// Text of day progress
-		leftMargin = scrnRECT.right*todayP *0.83;
+		leftMargin = scrnRECT.right*todayP *0.9;
 		sprintf_s(tmpStr, "%.7lf%s", todayP * 100, "%");
 		TextOutA(storageDC, leftMargin, scrnRECT.bottom*yesterdayYP + 10, tmpStr, lstrlenA(tmpStr));
 		TextOutA(storageDC, leftMargin, scrnRECT.bottom*yesterdayYP + 45, "of today has passed", lstrlenA("of today has passed"));
