@@ -8,7 +8,7 @@ Also because I saw Jonic(https://github.com/Jonic/WhatColourIsIt-ScreenSaver) ma
 ![image](https://github.com/Envl/WhatColorIsIt-ScreenSaver-Win32/blob/master/Scrnshot.jpg)  
   
 # Year Meter
-![image](https://github.com/Envl/WhatColorIsIt-ScreenSaver-Win32/blob/master/yearmeter.png)
+![image](https://github.com/Envl/WhatColorIsIt-ScreenSaver-Win32/blob/year-meter/yearmeter.png)
 
 
 //How to use  
